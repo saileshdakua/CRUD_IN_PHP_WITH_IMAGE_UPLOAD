@@ -1,6 +1,32 @@
 <?php
+session_start();
+if(!isset($_SESSION['id'])){
+    header('location:login.php');
+    exit();
+}
 require 'dbcon.php';
+
+// Get the user ID from the URL or form data
+if (isset($_GET['id'])) {
+    $profile_user_id = $_GET['id'];
+} else {
+    // Handle cases where the user ID is not provided in the URL
+    // You can redirect to a different page or show an error message
+    echo "User ID not provided.";
+    header("Location: login.php");
+    exit();
+}
+
+// Check if the logged-in user's ID matches the profile user's ID
+// Allow access for admin user
+if ($_SESSION['role'] != 'admin' && $_SESSION['id'] != $profile_user_id) {
+    // echo "Access denied. You are not authorized to view this page.";
+    header("Location: index.php");
+    exit();
+}
+
 ?>
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -22,7 +48,11 @@ require 'dbcon.php';
                 <div class="card">
                     <div class="card-header">
                         <h4>Student View Details 
-                            <a href="index.php" class="btn btn-danger float-end">BACK</a>
+                            <span class="float-end">
+                            <a href="<?php echo ($_SESSION['role'] == 'admin') ? 'admin_index.php' : 'index.php'; ?>" class="btn btn-warning">BACK</a>
+
+                            <a href="logout.php" class="btn btn-danger">Logout</a>
+                            </span>
                         </h4>
                     </div>
                     <div class="card-body">
@@ -31,7 +61,7 @@ require 'dbcon.php';
                         if(isset($_GET['id']))
                         {
                             $student_id = mysqli_real_escape_string($con, $_GET['id']);
-                            $query = "SELECT * FROM students WHERE id='$student_id' ";
+                            $query = "SELECT * FROM students WHERE id='$student_id'";
                             $query_run = mysqli_query($con, $query);
 
                             if(mysqli_num_rows($query_run) > 0)
@@ -118,7 +148,7 @@ require 'dbcon.php';
                                     </p>
                                     </div>
 
-                                    <div class="form-group col-md-6">
+                                    <!-- <div class="form-group col-md-6">
                                         <label for="password">Password:</label>
                                         <p class="form-control">
                                             <?=$student['password'];?>
@@ -128,12 +158,12 @@ require 'dbcon.php';
                                     <div class="form-group col-md-6">
                                         <label for="password_cnf">Confirm Password:</label>
                                         <p class="form-control">
-                                            <?=$student['password_cnf'];?>
+                                            <?=$student['password'];?>
                                         </p>
-                                    </div>
+                                    </div> -->
                                     <div class="col-md-12 mb-4 text-center">
                                     <a type="button" class="btn btn-success" href="student-edit.php?id=<?= $student['id']; ?>"
-                                    class="btn btn-success btn-sm">Update</a>
+                                    class="btn btn-success btn-sm">EDIT</a>
                                     </div>
 
 

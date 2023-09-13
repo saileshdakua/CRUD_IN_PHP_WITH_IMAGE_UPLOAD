@@ -5,6 +5,16 @@ if (!isset($_SESSION['id'])) {
     exit();
 }
 
+
+// Check if the logged-in user's ID matches the profile user's ID
+// Allow access for admin user
+if ($_SESSION['role'] != 'admin') {
+    // echo "Access denied. You are not authorized to view this page.";
+    header("Location: index.php");
+    exit();
+}
+
+
 require 'dbcon.php';
 ?>
 
@@ -31,12 +41,7 @@ require 'dbcon.php';
                 <div class="card-header">
                     <h4>Student Details
                         <span class="float-end">
-                        <?php
-                        if ($_SESSION['role'] == 'admin') {
-                            // Show the "Add Students" button only for admin users
-                            echo '<a href="student-create.php" class="btn btn-primary">Add Students</a>';
-                        }
-                        ?>
+                        <a href="student-create.php" class="btn btn-primary">Add Students</a>
                         <a href="logout.php" class="btn btn-danger">Logout</a>
                         </span>
                     </h4>
@@ -44,7 +49,7 @@ require 'dbcon.php';
                 <div class="card-body">
 
                     <div class="table-responsive">
-                        <table class="table table-bordered table-striped text-center">
+                        <table class="table table-bordered table-striped">
                             <thead>
                             <tr>
                                 <th>ID</th>
@@ -54,17 +59,26 @@ require 'dbcon.php';
                                 <th>Profile</th>
                                 <th>DOB</th>
                                 <th>Course</th>
-                                <th colspan="3">Action</th>
+                                <th>Action</th>
                             </tr>
                             </thead>
                             <tbody>
                             <?php $x = 1; ?>
                             <?php
-                            // Get the logged-in user's ID
+                            // Get the logged-in user's ID and role
                             $logged_in_user_id = $_SESSION['id'];
+                            $logged_in_user_role = $_SESSION['role'];
 
-                            // Query to select only the records of the logged-in user
-                            $query = "SELECT * FROM students WHERE id = $logged_in_user_id";
+                            // Query to select records based on the user's role
+                            $query = "";
+                            if ($logged_in_user_role == "admin") {
+                                // Admin can see all users
+                                $query = "SELECT * FROM students";
+                            } else {
+                                // Regular users can only see their own data
+                                $query = "SELECT * FROM students WHERE id = $logged_in_user_id";
+                            }
+
                             $query_run = mysqli_query($con, $query);
 
                             if (mysqli_num_rows($query_run) > 0) {
@@ -100,18 +114,21 @@ require 'dbcon.php';
                                         <td>
                                             <a href="student-view.php?id=<?= $student['id']; ?>"
                                                class="btn btn-info btn-sm">View</a>
-                                        </td>
-                                        <td>
-                                            <a href="student-edit.php?id=<?= $student['id']; ?>"
-                                               class="btn btn-success btn-sm">Edit</a>
-                                        </td>
-                                        <td>
-                                            <form action="code.php" method="POST" class="d-inline">
-                                                <button type="submit" name="delete_student"
-                                                        value="<?= $student['id']; ?>"
-                                                        class="btn btn-danger btn-sm">Delete
-                                                </button>
-                                            </form>
+                                            <?php
+                                            if ($logged_in_user_role == "admin" || $logged_in_user_id == $student['id']) {
+                                                // Admin can edit/delete all users, and regular users can edit/delete their own data
+                                                ?>
+                                                <a href="student-edit.php?id=<?= $student['id']; ?>"
+                                                   class="btn btn-success btn-sm">Edit</a>
+                                                <form action="code.php" method="POST" class="d-inline">
+                                                    <button type="submit" name="delete_student"
+                                                            value="<?= $student['id']; ?>"
+                                                            class="btn btn-danger btn-sm">Delete
+                                                    </button>
+                                                </form>
+                                                <?php
+                                            }
+                                            ?>
                                         </td>
                                     </tr>
                                     <?php
@@ -123,7 +140,6 @@ require 'dbcon.php';
                             </tbody>
                         </table>
                     </div>
-
                 </div>
             </div>
         </div>

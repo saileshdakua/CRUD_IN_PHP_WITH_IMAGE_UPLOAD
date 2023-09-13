@@ -1,7 +1,31 @@
 <?php
 session_start();
+if(!isset($_SESSION['id'])){
+    header('location:login.php');
+}
 require 'dbcon.php';
+
+// Get the user ID from the URL or form data
+if (isset($_GET['id'])) {
+    $profile_user_id = $_GET['id'];
+} else {
+    // Handle cases where the user ID is not provided in the URL
+    // You can redirect to a different page or show an error message
+    echo "User ID not provided.";
+    header("Location: login.php");
+    exit();
+}
+
+// Check if the logged-in user's ID matches the profile user's ID
+// Allow access for admin user
+if ($_SESSION['role'] != 'admin' && $_SESSION['id'] != $profile_user_id) {
+    // echo "Access denied. You are not authorized to view this page.";
+    header("Location: index.php");
+    exit();
+}
+
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -26,7 +50,11 @@ require 'dbcon.php';
             <div class="card">
                 <div class="card-header">
                     <h4>Student Edit 
-                        <a href="index.php" class="btn btn-danger float-end">BACK</a>
+                            <span class="float-end">
+                            <a href="<?php echo ($_SESSION['role'] == 'admin') ? 'admin_index.php' : 'index.php'; ?>" class="btn btn-warning">BACK</a>
+
+                            <a href="logout.php" class="btn btn-danger">Logout</a>
+                            </span>
                     </h4>
                 </div>
                 <div class="card-body">
@@ -136,7 +164,12 @@ require 'dbcon.php';
 
                                     <div class="form-group col-md-6">
                                         <label for="password_cnf">Confirm Password:</label>
-                                        <input id="password_cnf" type="password" class="form-control" name="password_cnf" minlength="3" maxlength="8" value="<?=$student['password_cnf'];?>">
+                                        <input id="password_cnf" type="password" class="form-control" name="password_cnf" minlength="3" maxlength="8" value="<?=$student['password'];?>">
+                                    </div>
+
+                                    <div class="form-group col-md-12">
+                                        <input type="checkbox" id="chk" name="condition_1" value="yes" <?=$student['condition_1'] == 'yes' ? 'checked' : '';?> class="form-check-input">
+                                        <label for="chk" class="form-check-label">Agree</label>
                                     </div>
 
                                     <div class="mb-3 text-center">

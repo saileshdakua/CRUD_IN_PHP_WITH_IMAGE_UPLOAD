@@ -1,5 +1,18 @@
 <?php
 session_start();
+if(!isset($_SESSION['id'])){
+    header('location:login.php');
+}
+
+
+// Check if the logged-in user's ID matches the profile user's ID
+// Allow access for admin user
+if ($_SESSION['role'] != 'admin') {
+    // echo "Access denied. You are not authorized to view this page.";
+    header("Location: index.php");
+    exit();
+}
+
 ?>
 
 <!doctype html>
@@ -25,7 +38,11 @@ session_start();
                 <div class="card">
                     <div class="card-header">
                         <h4>Student Registration 
-                            <a href="index.php" class="btn btn-danger float-end">BACK</a>
+                            <span class="float-end">
+                            <a href="<?php echo ($_SESSION['role'] == 'admin') ? 'admin_index.php' : 'index.php'; ?>" class="btn btn-warning">BACK</a>
+
+                            <a href="logout.php" class="btn btn-danger">Logout</a>
+                            </span>
                         </h4>
                     </div>
                     <div class="card-body">
